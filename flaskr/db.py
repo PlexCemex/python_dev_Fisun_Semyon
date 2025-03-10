@@ -6,21 +6,23 @@ from flask import current_app, g
 
 
 def get_db(app):
-    if 'db' not in g:
-        g.db = sqlite3.connect(
-            app.config['DATABASE'],
-            detect_types=sqlite3.PARSE_DECLTYPES
-        )
-        g.db.row_factory = sqlite3.Row
+    db_general = sqlite3.connect(
+        app.config['DATABASE_GENERAL'],
+        detect_types=sqlite3.PARSE_DECLTYPES
+    )
+    db_general.row_factory = sqlite3.Row
 
-    return g.db
+    db_authors = sqlite3.connect(
+        app.config['DATABASE_AUTHORS'],
+        detect_types=sqlite3.PARSE_DECLTYPES
+    )
+    db_authors.row_factory = sqlite3.Row
+
+    return db_general, db_authors
 
 
-def close_db(e=None):
-    db = g.pop('db', None)
-
-    if db is not None:
-        db.close()
+def close_db(db):
+    db.close()
 
 
 

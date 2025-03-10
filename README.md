@@ -5,7 +5,7 @@
 ```sh
 python3 -m venv .venv
 .venv\Scripts\activate
-pip install Flask
+pip install -r requirements.txt
 flask --app flaskr init-db
 flask --app flaskr run --debug
 ```
