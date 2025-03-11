@@ -20,8 +20,11 @@ CREATE TABLE IF NOT EXISTS logs (
     FOREIGN KEY (event_type_id) REFERENCES event_type(id)
 );
 
+DELETE FROM space_type;
+DELETE FROM event_type;
+
 -- Вставка типов пространств
-INSERT INTO space_type (type) VALUES ('global'), ('blog'), ('post');
+INSERT INTO space_type (id, type) VALUES (1, 'global'), (2, 'blog'), (3, 'post');
 
 -- Вставка типов событий
-INSERT INTO event_type (type) VALUES ('login'), ('comment'), ('create_post'), ('delete_post'), ('logout');
+INSERT INTO event_type (id, type) VALUES (1, 'login'), (2, 'logout'), (3, 'create_post'), (4, 'delete_post'), (5, 'comment');
