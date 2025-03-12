@@ -1,10 +1,11 @@
 import os
-from flask import Flask
+from flask import Flask, abort
 from .db import get_db
 from .db import close_db
 from faker import Faker
 import random
 import datetime
+from flask import request
 
 SPACE_TYPE_GLOBAL = 1
 SPACE_TYPE_BLOG = 2
@@ -47,11 +48,35 @@ def create_app(test_config=None):
     # export comments api
     @app.route("/api/comments")
     def api_comments():
-        return {
-            "username": "user.username",
-            "theme": "user.theme",
-            "image": "url_for(user_image, filename=user.image)",
-        }
+        login = request.args.get('login',"")
+        if login == "":
+            abort (404)
+
+        db_general, db_authors = get_db(app)
+        res = db_authors.execute("""
+            SELECT a2.login AS login_of_commentor, c.post_id, COUNT(*) AS count_of_comments, p.header AS post_header, a.login AS login_of_authon_post
+            FROM comment AS c
+            JOIN post p on p.id = c.post_id
+            JOIN author a on a.id = p.author_id
+            JOIN author a2 on a2.id = c.author_id
+            WHERE a2.login = ?
+            GROUP BY c.post_id
+        """, [login])
+        rows = res.fetchall()
+
+        close_db(db_authors)
+
+        json = []
+        for z in rows:
+            json.append(   {
+                'login': z['login_of_commentor'],
+                'post_id': z['post_id'],
+                'count_of_comments': z['count_of_comments'],
+                'post_header': z['post_header'],
+                'login_of_authon_post': z['login_of_authon_post'],
+            })
+        
+        return json
 
     # export logs api
     @app.route("/api/general")
