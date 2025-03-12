@@ -3,6 +3,7 @@
 DROP TABLE IF EXISTS post;
 DROP TABLE IF EXISTS blog;
 DROP TABLE IF EXISTS author;
+DROP TABLE IF EXISTS comment;
 
 -- DELETE FROM post;
 -- DELETE FROM blog;
@@ -30,4 +31,13 @@ CREATE TABLE IF NOT EXISTS post (
     blog_id INTEGER,
     FOREIGN KEY (author_id) REFERENCES author(id),
     FOREIGN KEY (blog_id) REFERENCES blog(id)
+);
+
+CREATE TABLE IF NOT EXISTS comment (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    text TEXT NOT NULL,
+    author_id INTEGER,
+    post_id INTEGER,
+    FOREIGN KEY (author_id) REFERENCES author(id),
+    FOREIGN KEY (post_id) REFERENCES post(id)
 );

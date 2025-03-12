@@ -44,6 +44,7 @@ def create_app(test_config=None):
     def hello():
         return "Hello, World!"
 
+    # export comments api
     @app.route("/api/comments")
     def api_comments():
         return {
@@ -52,6 +53,7 @@ def create_app(test_config=None):
             "image": "url_for(user_image, filename=user.image)",
         }
 
+    # export logs api
     @app.route("/api/general")
     def api_general():
         return {
@@ -60,6 +62,7 @@ def create_app(test_config=None):
             "image": "url_for(user_image, filename=user.image)11111",
         }
 
+    # init database schema and fake data to work with it
     @app.cli.command("init-db")
     def init_db_command():
         db_general, db_authors = get_db(app)
@@ -77,7 +80,7 @@ def create_app(test_config=None):
         num_of_posts = 100
         num_of_comment = 500
 
-        # Р В Р ВµР С–Р С‘РЎРѓРЎвЂљРЎР‚Р В°РЎвЂ Р С‘РЎРЏ РЎвЂћР ВµР в„–Р С”Р С•Р Р†РЎвЂ№РЎвЂ¦ Р С—Р С•Р В»РЎРЉР В·Р С•Р Р†Р В°РЎвЂљР ВµР В»Р ВµР в„–
+        # generate fake users and their login activity
         for i in range(1, num_of_users + 1):
             db_authors.execute(
                 "INSERT INTO author (id,email,login) VALUES (?,?,?)",
@@ -98,9 +101,8 @@ def create_app(test_config=None):
         db_authors_cursor = db_authors.cursor()
         blogs_and_owners = {}
 
-        # Р В Р ВµР С–Р С‘РЎРѓРЎвЂљРЎР‚Р В°РЎвЂ Р С‘РЎРЏ Р В±Р В»Р С•Р С–Р С•Р Р† РЎР‹Р В·Р ВµРЎР‚Р С•Р Р†, РЎРѓР С•РЎвЂ¦РЎР‚Р В°Р Р…РЎРЏР ВµР С� РЎРѓР Р†РЎРЏР В·РЎРЉ Р В±Р В»Р С•Р С–Р В° Р С‘ РЎР‹Р В·Р ВµРЎР‚Р В° Р Р† blogs_and_owners
+        # generate fake blogs
         for _ in range(1, num_of_blogs + 1):
-            # Р вЂ�Р В»Р С•Р С–
             owner_id = random.randint(1, num_of_users)
             db_authors_cursor.execute(
                 "INSERT INTO blog (owner_id, name, description) VALUES (?,?,?)",
@@ -109,14 +111,14 @@ def create_app(test_config=None):
             blogs_and_owners[db_authors_cursor.lastrowid] = owner_id
         db_authors.commit()
 
+        # generate fake posts and may be comment for them
         for i in range(1, num_of_posts + 1):
             blog_id = random.randint(1, num_of_blogs)
             db_authors_cursor.execute(
                 "INSERT INTO post (header, text, author_id, blog_id) VALUES (?,?,?,?)",
                 [fake.sentence(), fake.text(500), blogs_and_owners[blog_id], blog_id],
             )
-
-            # Р вЂєР С•Р С– Р С—РЎР‚Р С• Р В±Р В»Р С•Р С–
+            
             db_general.execute(
                 "INSERT INTO logs (datetime, user_id, space_type_id, event_type_id) VALUES (?, ?, ?, ?)",
                 [
@@ -126,22 +128,29 @@ def create_app(test_config=None):
                     EVENT_TYPE_CREATE_POST,
                 ],
             )
+
+            for _ in range(3):
+                if random.random() < 0.5:
+                    owner_id = random.randint(1, num_of_users)
+                    db_authors_cursor.execute(
+                        "INSERT INTO comment (text, author_id, post_id) VALUES (?, ?, ?)",
+                        [fake.text(), owner_id, i],
+                    )
+
+                    db_general.execute(
+                    "INSERT INTO logs (datetime, user_id, space_type_id, event_type_id) VALUES (?, ?, ?, ?)",
+                    [
+                        datetime.datetime(2021, 10, 1) + datetime.timedelta(hours=i),
+                        owner_id,
+                        SPACE_TYPE_POST,
+                        EVENT_TYPE_COMMENT,
+                    ],
+                )
+                
         db_authors.commit()
         db_general.commit()
 
-        for i in range(1, num_of_comment + 1):
-            owner_id = random.randint(1, num_of_users)
-            db_general.execute(
-                "INSERT INTO logs (datetime, user_id, space_type_id, event_type_id) VALUES (?, ?, ?, ?)",
-                [
-                    datetime.datetime(2021, 10, 1) + datetime.timedelta(hours=i),
-                    owner_id,
-                    SPACE_TYPE_POST,
-                    EVENT_TYPE_COMMENT,
-                ],
-            )
-        db_general.commit()
-
+        # save database
         close_db(db_general)
         close_db(db_authors)
 
