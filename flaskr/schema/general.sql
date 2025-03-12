@@ -1,5 +1,10 @@
 -- Создание второй базы данных general_database
 
+DROP TABLE IF EXISTS logs;
+DROP TABLE IF EXISTS event_type;
+DROP TABLE IF EXISTS space_type;
+
+
 CREATE TABLE IF NOT EXISTS space_type (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type TEXT NOT NULL
@@ -20,8 +25,8 @@ CREATE TABLE IF NOT EXISTS logs (
     FOREIGN KEY (event_type_id) REFERENCES event_type(id)
 );
 
-DELETE FROM space_type;
-DELETE FROM event_type;
+-- DELETE FROM space_type;
+-- DELETE FROM event_type;
 
 -- Вставка типов пространств
 INSERT INTO space_type (id, type) VALUES (1, 'global'), (2, 'blog'), (3, 'post');

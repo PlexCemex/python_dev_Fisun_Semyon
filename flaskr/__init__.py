@@ -73,8 +73,9 @@ def create_app(test_config=None):
         fake = Faker()
 
         num_of_users = 10
-        num_of_blogs = 100
-        num_of_posts = 1000
+        num_of_blogs = 50
+        num_of_posts = 100
+        num_of_comment = 500
 
         # Р В Р ВµР С–Р С‘РЎРѓРЎвЂљРЎР‚Р В°РЎвЂ Р С‘РЎРЏ РЎвЂћР ВµР в„–Р С”Р С•Р Р†РЎвЂ№РЎвЂ¦ Р С—Р С•Р В»РЎРЉР В·Р С•Р Р†Р В°РЎвЂљР ВµР В»Р ВµР в„–
         for i in range(1, num_of_users + 1):
@@ -88,24 +89,29 @@ def create_app(test_config=None):
         blogs_and_owners = {}
 
         # Р В Р ВµР С–Р С‘РЎРѓРЎвЂљРЎР‚Р В°РЎвЂ Р С‘РЎРЏ Р В±Р В»Р С•Р С–Р С•Р Р† РЎР‹Р В·Р ВµРЎР‚Р С•Р Р†, РЎРѓР С•РЎвЂ¦РЎР‚Р В°Р Р…РЎРЏР ВµР С� РЎРѓР Р†РЎРЏР В·РЎРЉ Р В±Р В»Р С•Р С–Р В° Р С‘ РЎР‹Р В·Р ВµРЎР‚Р В° Р Р† blogs_and_owners
-        for i in range(1, num_of_blogs + 1):
+        for _ in range(1, num_of_blogs + 1):
             # Р вЂ�Р В»Р С•Р С–
             owner_id = random.randint(1,num_of_users)
             db_authors_cursor.execute('INSERT INTO blog (owner_id, name, description) VALUES (?,?,?)',[owner_id,fake.sentence(), fake.paragraph()])
             blogs_and_owners[db_authors_cursor.lastrowid] = owner_id
-
-            # Р вЂєР С•Р С– Р С—РЎР‚Р С• Р В±Р В»Р С•Р С–
-            db_general.execute('INSERT INTO logs (datetime, user_id, space_type_id, event_type_id) VALUES (?, ?, ?, ?)',
-                               [   datetime.datetime(2021, 1, 1) + datetime.timedelta(days=i) , owner_id, SPACE_TYPE_BLOG, EVENT_TYPE_CREATE_POST ])
         db_authors.commit()
-        db_general.commit()
 
-        for _ in range(1,num_of_posts+1):
+        for i in range(1,num_of_posts+1):
             blog_id = random.randint(1, num_of_blogs)
             db_authors_cursor.execute('INSERT INTO post (header, text, author_id, blog_id) VALUES (?,?,?,?)',
                                       [fake.sentence(), fake.text(500), blogs_and_owners[blog_id], blog_id] )
+            
+            # Р вЂєР С•Р С– Р С—РЎР‚Р С• Р В±Р В»Р С•Р С–
+            db_general.execute('INSERT INTO logs (datetime, user_id, space_type_id, event_type_id) VALUES (?, ?, ?, ?)',
+                               [   datetime.datetime(2021, 1, 1) + datetime.timedelta(days=i) , blogs_and_owners[blog_id], SPACE_TYPE_BLOG, EVENT_TYPE_CREATE_POST ])
         db_authors.commit()
+        db_general.commit()
 
+        for i in range (1,num_of_comment+1):
+            owner_id = random.randint(1,num_of_users)
+            db_general.execute('INSERT INTO logs (datetime, user_id, space_type_id, event_type_id) VALUES (?, ?, ?, ?)',
+                               [   datetime.datetime(2021, 10, 1) + datetime.timedelta(hours=i) , owner_id, SPACE_TYPE_POST, EVENT_TYPE_COMMENT ])
+        db_general.commit()
         
         close_db(db_general)
         close_db(db_authors)

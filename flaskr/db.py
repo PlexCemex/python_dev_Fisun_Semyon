@@ -23,6 +23,3 @@ def get_db(app):
 
 def close_db(db):
     db.close()
-
-
-

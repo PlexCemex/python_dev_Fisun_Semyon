@@ -1,0 +1,2 @@
+instance/*.sqlite
+flaskr/__pycache__/*
