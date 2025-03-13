@@ -2,3 +2,8 @@ instance/*.sqlite
 flaskr/__pycache__/
 .idea/
 author.sqlite
+.idea/dataSources.xml
+flaskr/__pycache__/__init__.cpython-313.pyc
+flaskr/__pycache__/db.cpython-313.pyc
+instance/authors.sqlite
+instance/general.sqlite
