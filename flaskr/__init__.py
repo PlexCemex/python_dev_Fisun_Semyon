@@ -15,7 +15,7 @@ EVENT_TYPE_LOGIN = 1
 EVENT_TYPE_LOGOUT = 2
 EVENT_TYPE_CREATE_POST = 3
 EVENT_TYPE_DELETE_POST = 4
-EVENT_TYPE_COMMENT = 5
+EVENT_TYPE_COMMENT = 5 
 
 
 def create_app(test_config=None):
@@ -48,12 +48,13 @@ def create_app(test_config=None):
     # export comments api
     @app.route("/api/comments")
     def api_comments():
-        login = request.args.get('login',"")
+        login = request.args.get("login", "")
         if login == "":
-            abort (404)
+            abort(404)
 
         db_general, db_authors = get_db(app)
-        res = db_authors.execute("""
+        res = db_authors.execute(
+            """
             SELECT a2.login AS login_of_commentor, c.post_id, COUNT(*) AS count_of_comments, p.header AS post_header, a.login AS login_of_authon_post
             FROM comment AS c
             JOIN post p on p.id = c.post_id
@@ -61,31 +62,73 @@ def create_app(test_config=None):
             JOIN author a2 on a2.id = c.author_id
             WHERE a2.login = ?
             GROUP BY c.post_id
-        """, [login])
+            """,
+            [login],
+        )
         rows = res.fetchall()
 
         close_db(db_authors)
 
         json = []
         for z in rows:
-            json.append(   {
-                'login': z['login_of_commentor'],
-                'post_id': z['post_id'],
-                'count_of_comments': z['count_of_comments'],
-                'post_header': z['post_header'],
-                'login_of_authon_post': z['login_of_authon_post'],
-            })
-        
+            json.append(
+                {
+                    "login": z["login_of_commentor"],
+                    "post_id": z["post_id"],
+                    "count_of_comments": z["count_of_comments"],
+                    "post_header": z["post_header"],
+                    "login_of_authon_post": z["login_of_authon_post"],
+                }
+            )
+
         return json
 
     # export logs api
     @app.route("/api/general")
     def api_general():
-        return {
-            "username": "user.username111",
-            "theme": "user.theme11111",
-            "image": "url_for(user_image, filename=user.image)11111",
-        }
+        login = request.args.get("login", "")
+        if login == "":
+            abort(404)
+
+        db_general, db_authors = get_db(app)
+        row = db_authors.execute(
+            """
+            SELECT a.id
+            FROM author AS a
+            WHERE a.login = ?
+        """,
+            [login],
+        ).fetchone()
+        id = row['id']
+        print(id)
+        res = db_general.execute(
+            """
+            SELECT  DATE (l.datetime) AS date_of_events,
+            (SELECT COUNT(*) FROM logs AS ll WHERE ll.user_id = l.user_id AND ll.event_type_id = 1 AND DATE (ll.datetime) = DATE (l.datetime)) AS count_of_logins,
+            (SELECT COUNT(*) FROM logs AS ll WHERE ll.user_id = l.user_id AND ll.event_type_id = 2 AND DATE (ll.datetime) = DATE (l.datetime)) AS count_of_logouts,
+            (SELECT COUNT(*) FROM logs AS ll WHERE ll.user_id = l.user_id AND ll.event_type_id IN (3,4) AND DATE (ll.datetime) = DATE (l.datetime)) AS count_of_blog_actions
+            FROM logs AS l
+            WHERE user_id= ?
+            GROUP BY datetime
+            """,
+            [id],
+        )
+        rows = res.fetchall()
+        close_db(db_authors)
+        close_db(db_general)
+
+        json = []
+        for z in rows:
+            json.append(
+                {
+                    "date_of_events": z["date_of_events"],
+                    "count_of_logins": z["count_of_logins"],
+                    "count_of_logouts": z["count_of_logouts"],
+                    "count_of_blog_actions": z["count_of_blog_actions"],
+                }
+            )
+
+        return json
 
     # init database schema and fake data to work with it
     @app.cli.command("init-db")
@@ -103,7 +146,6 @@ def create_app(test_config=None):
         num_of_users = 10
         num_of_blogs = 50
         num_of_posts = 100
-        num_of_comment = 500
 
         # generate fake users and their login activity
         for i in range(1, num_of_users + 1):
@@ -143,7 +185,7 @@ def create_app(test_config=None):
                 "INSERT INTO post (header, text, author_id, blog_id) VALUES (?,?,?,?)",
                 [fake.sentence(), fake.text(500), blogs_and_owners[blog_id], blog_id],
             )
-            
+
             db_general.execute(
                 "INSERT INTO logs (datetime, user_id, space_type_id, event_type_id) VALUES (?, ?, ?, ?)",
                 [
@@ -163,15 +205,16 @@ def create_app(test_config=None):
                     )
 
                     db_general.execute(
-                    "INSERT INTO logs (datetime, user_id, space_type_id, event_type_id) VALUES (?, ?, ?, ?)",
-                    [
-                        datetime.datetime(2021, 10, 1) + datetime.timedelta(hours=i),
-                        owner_id,
-                        SPACE_TYPE_POST,
-                        EVENT_TYPE_COMMENT,
-                    ],
-                )
-                
+                        "INSERT INTO logs (datetime, user_id, space_type_id, event_type_id) VALUES (?, ?, ?, ?)",
+                        [
+                            datetime.datetime(2021, 10, 1)
+                            + datetime.timedelta(hours=i),
+                            owner_id,
+                            SPACE_TYPE_POST,
+                            EVENT_TYPE_COMMENT,
+                        ],
+                    )
+
         db_authors.commit()
         db_general.commit()
 
