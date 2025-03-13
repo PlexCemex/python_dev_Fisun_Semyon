@@ -120,7 +120,7 @@ def create_app(test_config=None):
         json = []
         for z in rows:
             json.append(
-                {
+                { 
                     "date_of_events": z["date_of_events"],
                     "count_of_logins": z["count_of_logins"],
                     "count_of_logouts": z["count_of_logouts"],
