@@ -27,6 +27,7 @@ http://127.0.0.1:5000/api/comments?login=erica04
 http://127.0.0.1:5000/api/general?login=erica04
 ![image of /api/general?login=erica04](image_gen.png)
 
+*картинки первых ответов для наглядности
 
 Discription:
 Из добавленного, не прописанного в ТЗ, я добавил таблицу комментариев в authors.sql. 
