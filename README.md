@@ -23,8 +23,9 @@ flask --app flaskr/app.py  run --debug
 Then goto your browser and test, for example:
 
 http://127.0.0.1:5000/api/comments?login=erica04
-
+![image of api/comments?login=erica04](image_com.png)
 http://127.0.0.1:5000/api/general?login=erica04
+![image of /api/general?login=erica04](image_gen.png)
 
 
 Discription:
